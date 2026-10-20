@@ -1,12 +1,25 @@
 # PAT912x Demo
 
-基于 AT32F425 与 PAT912x 光流传感器的演示工程。
+A demo project based on the AT32F425 MCU and the PAT912x optical flow sensor.
 
-## 目录说明
+## Repository Structure
 
-- `01-AT32F425-PAT912x/`:固件工程(CMake)
-- `02-Hardware/`:硬件资料
+- `01-AT32F425-PAT912x/`: Firmware project (CMake)
+- `02-Hardware/`: Hardware resources
+  - `images/`: Photos and diagrams
+  - `schematic/`: Schematics (PDF)
 
-## 硬件图片
+## Hardware
 
-![PCB 正面](02-Hardware/images/pcb-top.jpg)
+- MCU: Artery AT32F425
+- Sensor: PixArt PAT912x optical flow sensor
+- Interface: I2C (update to match your design)
+
+![PCB top view](02-Hardware/images/pcb-top.jpg)
+
+## Build
+
+```bash
+cd 01-AT32F425-PAT912x
+cmake -S . -B build
+cmake --build build
