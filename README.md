@@ -14,8 +14,9 @@ A demo project based on the AT32F425 MCU and the PAT912x optical flow sensor.
 - MCU: Artery AT32F425
 - Sensor: PixArt PAT912x optical flow sensor
 - Interface: I2C (update to match your design)
-
-![PCB top view](02-Hardware/images/pcb-top.jpg)
+![Hardware 1](02-Hardware/images/1.jpg)
+![Hardware 2](02-Hardware/images/2.jpg)
+![Hardware 3](02-Hardware/images/3.jpg)
 
 ## Build
 
