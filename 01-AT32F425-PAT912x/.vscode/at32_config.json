@@ -1,0 +1,15 @@
+{
+  "programmer": "AT-Link/DAP Link",
+  "eraseMode": "full",
+  "program": true,
+  "verify": true,
+  "resetAndRun": true,
+  "usbMode": "HID",
+  "dapInterface": "3",
+  "autoLinkerScript": true,
+  "customCfgFiles": [
+    "scripts/target/at32f425xx.cfg"
+  ],
+  "customFlmFiles": [],
+  "jlinkPath": "C:\\Program Files\\SEGGER\\JLink_V924a"
+}

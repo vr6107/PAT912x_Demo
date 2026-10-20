@@ -1,0 +1,131 @@
+PAT9126 Single-Sensor Serial Communication Protocol
+Version: v1.0
+Date:    2026-10-20
+Hardware: AT32F425 + PAT9126JA x1 (I2C)
+Interface: USB CDC VCP (virtual serial port)
+
+================================================================
+1. Physical Layer
+================================================================
+
+Interface type : USB Full-Speed CDC VCP
+Baud rate      : Not applicable (USB CDC has no baud-rate limit)
+Frame rate     : Approx. 200 Hz (5 ms polling interval, see Section 6)
+Encoding       : ASCII
+Line terminator: \r\n
+
+================================================================
+2. Downstream Frames (Device -> Host)
+================================================================
+
+[2.1 Startup Frame / CSV Header]
+
+Sent once automatically after USB enumeration completes (CONFIGURED):
+
+$timestamp_ms,sensor,dx,dy,tx_mm,ty_mm,sq\r\n
+
+Note: The header also starts with '$'. The host must tell it apart
+from data frames by checking whether the first field is numeric
+(see Section 5).
+
+
+[2.2 Data Frame]
+
+Frame start : '$'
+Frame end   : \r\n
+Send period : One frame per polling cycle (approx. 5 ms), sent only
+              after a successful sensor read
+
+Format:
+$<timestamp>,<sensor>,<dx>,<dy>,<tx_mm>,<ty_mm>,<sq>\r\n
+
+Fields:
+
+  timestamp  uint32   ms     Reset to 0 when the header is sent, then
+                             incremented by 5 each loop. Not affected
+                             by the 'R' command.
+  sensor     string   -      Fixed text "PAT912x"
+  dx         int16    count  Raw X increment for this frame
+                             (12-bit signed, range +/-2047)
+  dy         int16    count  Raw Y increment for this frame
+                             (12-bit signed, range +/-2047)
+  tx_mm      decimal  mm     Accumulated X displacement,
+                             fixed 3 decimal places
+  ty_mm      decimal  mm     Accumulated Y displacement,
+                             fixed 3 decimal places
+  sq         uint8    -      Image quality (higher is better).
+                             Holds the last valid value while the
+                             sensor is stationary.
+
+Example:
+$125,PAT912x,-3,5,-0.076,0.127,42\r\n
+
+Notes:
+  - With no motion, dx and dy are 0 and the accumulated displacement
+    stays unchanged.
+  - Displacement is signed decimal: negative values carry '-',
+    positive values carry no sign.
+  - If fixed-width output is enabled in firmware, fields may be
+    padded with leading spaces. The host must strip them.
+
+
+================================================================
+3. Upstream Commands (Host -> Device)
+================================================================
+
+[R / r - Reset accumulated displacement]
+
+Send the character 'R' or 'r'. The device clears the accumulated
+displacement (tx, ty). The timestamp is not affected and keeps
+increasing. If a received chunk contains 'R' or 'r' anywhere, the
+reset is triggered. All other characters are ignored.
+
+Device reply:
+#RESET\r\n
+
+================================================================
+4. Conversion Parameters
+================================================================
+
+Resolution registers : RES_X = RES_Y = 0xC8
+Resolution           : 1000 CPI (0xC8 x 5 CPI/LSB; verify by
+                       measurement)
+Displacement/count   : 25.4 mm / 1000 = 0.0254 mm = 25.4 um
+
+Firmware integer arithmetic (no floating point):
+  um    = counts x 25400 / CPI
+  tx_mm = integer part of (um / 1000) . 3-digit remainder (um % 1000)
+
+Integer division truncates toward zero. Accumulated counts are stored
+as int32, so no rounding error builds up.
+
+================================================================
+5. Host Parsing Guidelines
+================================================================
+
+- Use '$' as the frame start and '\r\n' as the frame end.
+- Split by comma. If the first field converts to a number, treat the
+  line as a data frame. Otherwise treat it as the header and skip it.
+- Ignore lines that do not start with '$' (e.g. the #RESET reply).
+- Strip leading and trailing spaces from each field before converting.
+- Frames with sq below 20 are excluded from integration by the
+  firmware. The host should flag them as suspect.
+- Send 'R' before each measurement so the accumulated displacement
+  starts from 0.
+
+================================================================
+6. Notes
+================================================================
+
+- Frame rate: The loop is "read + send + delay_ms(5)", so the real
+  period is slightly longer than 5 ms. The timestamp is a nominal
+  time accumulated in 5 ms steps, not a hardware-measured time.
+- Dropped frames: If an I2C read or sensor initialization fails, no
+  data frame is sent in that cycle. A failed initialization is
+  retried automatically every 1 second.
+- Integration filter: Deltas are added to the accumulated
+  displacement only when motion is detected AND no overflow occurred
+  AND sq > 19.
+- The CPI is a nominal value. Real displacement depends on mounting
+  height and surface. Calibrate against a 100 mm measured move and
+  adjust PAT9126_CPI accordingly.

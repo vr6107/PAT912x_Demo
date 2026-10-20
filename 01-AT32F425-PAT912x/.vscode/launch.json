@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "AT-Link/DAP Link",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceFolder}",
+      "executable": "c:/Work/12_My/10_Inclinometer/01-AT32F425-IMU/build/01-AT32F425-IMU.elf",
+      "gdbPath": "${command:at32.get.gdb}",
+      "serverpath": "${command:at32.get.openocd}",
+      "configFiles": [
+        "${command:at32.get.cfg.atlink}",
+        "C:/Users/NZY1SGH/AppData/Local/at32-tools/OpenOCD/V2.0.9/scripts/target/at32f425xx.cfg"
+      ],
+      "svdFile": "${command:at32.get.svd}",
+      "runToEntryPoint": "main",
+      "device": "AT32F425K8U7",
+      "interface": "swd",
+      "liveWatch": {
+        "enabled": true,
+        "interval": 100,
+        "expressions": []
+      }
+    }
+  ]
+}

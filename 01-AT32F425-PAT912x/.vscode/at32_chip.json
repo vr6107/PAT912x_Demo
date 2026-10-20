@@ -1,0 +1,11 @@
+{
+  "projectName": "01-AT32F425-IMU",
+  "chip": "AT32F425K8U7",
+  "series": "AT32F425",
+  "productLine": "Value line",
+  "flash": "64KB+4KB",
+  "sram": "20KB",
+  "package": "QFN32",
+  "frequency": "96MHz",
+  "core": "M4"
+}
