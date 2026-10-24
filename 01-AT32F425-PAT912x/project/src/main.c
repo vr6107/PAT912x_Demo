@@ -125,7 +125,7 @@ int main(void)
     while (1)
     {
         if (!header_sent && usb_cdc_connected()) {
-            usb_printf("$timestamp_ms,p1_dx,p1_dy,p1_tx_mm,p1_ty_mm,p1_sq\r\n");
+            usb_printf("$timestamp_ms,id,dx,dy,tx_mm,ty_mm,sq\r\n");
             header_sent = 1u;
             ts_ms = 0u;
         }
@@ -150,7 +150,7 @@ int main(void)
                 split_um(counts_to_um(s_state.total_x), &sx, &xm, &xf);
                 split_um(counts_to_um(s_state.total_y), &sy, &ym, &yf);
 
-                usb_printf("$%lu,PAT912x, %d,%d,%s%ld.%03ld,%s%ld.%03ld,%u\r\n",
+                usb_printf("$%lu,PAT,%d,%d,%s%ld.%03ld,%s%ld.%03ld,%u\r\n",
                            (unsigned long)ts_ms,
                            (int)motion.delta_x, (int)motion.delta_y,
                            sx, (long)xm, (long)xf,

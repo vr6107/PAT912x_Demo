@@ -1,6 +1,6 @@
 PAT9126 Single-Sensor Serial Communication Protocol
-Version: v1.0
-Date:    2026-10-20
+Version: v1.1
+Date:    2026-10-24
 Hardware: AT32F425 + PAT9126JA x1 (I2C)
 Interface: USB CDC VCP (virtual serial port)
 
@@ -22,7 +22,7 @@ Line terminator: \r\n
 
 Sent once automatically after USB enumeration completes (CONFIGURED):
 
-$timestamp_ms,sensor,dx,dy,tx_mm,ty_mm,sq\r\n
+$timestamp_ms,id,dx,dy,tx_mm,ty_mm,sq\r\n
 
 Note: The header also starts with '$'. The host must tell it apart
 from data frames by checking whether the first field is numeric
@@ -37,14 +37,17 @@ Send period : One frame per polling cycle (approx. 5 ms), sent only
               after a successful sensor read
 
 Format:
-$<timestamp>,<sensor>,<dx>,<dy>,<tx_mm>,<ty_mm>,<sq>\r\n
+$<timestamp>,PAT,<dx>,<dy>,<tx_mm>,<ty_mm>,<sq>\r\n
+
+Each frame is a single CSV line with 7 fields, including the
+timestamp and the 3-character sensor identifier PAT.
 
 Fields:
 
   timestamp  uint32   ms     Reset to 0 when the header is sent, then
                              incremented by 5 each loop. Not affected
                              by the 'R' command.
-  sensor     string   -      Fixed text "PAT912x"
+  id         string   -      Fixed text "PAT" identifying PAT9126
   dx         int16    count  Raw X increment for this frame
                              (12-bit signed, range +/-2047)
   dy         int16    count  Raw Y increment for this frame
@@ -58,15 +61,14 @@ Fields:
                              sensor is stationary.
 
 Example:
-$125,PAT912x,-3,5,-0.076,0.127,42\r\n
+$125,PAT,-3,5,-0.076,0.127,42\r\n
 
 Notes:
   - With no motion, dx and dy are 0 and the accumulated displacement
     stays unchanged.
   - Displacement is signed decimal: negative values carry '-',
     positive values carry no sign.
-  - If fixed-width output is enabled in firmware, fields may be
-    padded with leading spaces. The host must strip them.
+  - Fields are comma-separated without padding spaces.
 
 
 ================================================================
@@ -107,6 +109,8 @@ as int32, so no rounding error builds up.
 - Split by comma. If the first field converts to a number, treat the
   line as a data frame. Otherwise treat it as the header and skip it.
 - Ignore lines that do not start with '$' (e.g. the #RESET reply).
+- After removing '$' and the line terminator, require exactly 7
+  comma-separated fields and verify that the second field is PAT.
 - Strip leading and trailing spaces from each field before converting.
 - Frames with sq below 20 are excluded from integration by the
   firmware. The host should flag them as suspect.
